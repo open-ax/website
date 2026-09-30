@@ -1,0 +1,20 @@
+# OpenAX
+
+> The web was built for human eyes, we're fixing that for agents.
+
+Agents use the web by looking at it. They screenshot the page, send it to
+a model and get back a place to click. Then they do it all again. Every step
+costs image tokens and every click is a guess. It breaks whenever the layout
+changes. But the page already knows what it can do. So OpenAX flips it: pages
+list the tools they offer and the browser runs the calls in your own tab.
+Nothing to read from pixels. Nothing to guess. Being usable by agents stops
+being extra work and starts being part of the page.
+
+## Links
+
+- [OpenAX on GitHub](https://github.com/open-ax): the organization, built in the open
+- [ax-kit](https://github.com/open-ax/ax-kit): the implementation
+- [WebMCP draft](https://webmachinelearning.github.io/webmcp/): the spec ax-kit follows, from the W3C Web Machine Learning Community Group
+- [W3C Web Machine Learning Community Group](https://www.w3.org/community/webmachinelearning/)
+- [OpenAX on X](https://x.com/getaxkit)
+- Contact: contactopenax@gmail.com
