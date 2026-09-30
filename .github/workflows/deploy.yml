@@ -24,6 +24,15 @@ jobs:
 
       - run: npm ci
 
+      - name: Check credentials
+        if: ${{ !env.SITE_URL || !secrets.CLOUDFLARE_API_TOKEN || !secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          echo "::error::Missing configuration. Add under Settings > Secrets and variables > Actions:"
+          echo "  Variable  SITE_URL                (e.g. https://openax.pages.dev)"
+          echo "  Secret    CLOUDFLARE_API_TOKEN   (Workers Scripts: Edit, Account Settings: Read)"
+          echo "  Secret    CLOUDFLARE_ACCOUNT_ID"
+          exit 1
+
       - name: Build and verify
         run: npm run build
         env:
