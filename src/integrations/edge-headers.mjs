@@ -3,6 +3,7 @@ import { existsSync } from 'node:fs';
 import { readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
+import { apexHost, hstsFor, isSharedHost } from './origin.mjs';
 
 const HEADERS_FILE = '_headers';
 const REDIRECTS_FILE = '_redirects';
@@ -75,7 +76,8 @@ export function edgeHeaders({ site = '' } = {}) {
 
         headers = headers
           .replaceAll('__CSP_SCRIPT_HASH__', scriptHashes.join(' '))
-          .replaceAll('__CSP_STYLE_HASH__', styleHashes.join(' '));
+          .replaceAll('__CSP_STYLE_HASH__', styleHashes.join(' '))
+          .replaceAll('__HSTS__', hstsFor(apexHost(site)));
 
         for (const [file, html] of documents) {
           const links = [...html.matchAll(/<link\s[^>]*rel="preload"[^>]*>/gi)]
@@ -87,7 +89,7 @@ export function edgeHeaders({ site = '' } = {}) {
 
           for (const route of routes) {
             const escaped = route.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            const block = new RegExp(`^${escaped}\\n(?:[ \\t].*\\n)*`, 'm');
+            const block = new RegExp(`^${escaped}\\r?\\n(?:[ \\t].*\\r?\\n)*`, 'm');
             if (!block.test(headers)) {
               logger.warn(`edge-headers: no header block for ${route} — Early Hints not applied.`);
               continue;
@@ -98,18 +100,27 @@ export function edgeHeaders({ site = '' } = {}) {
 
         await writeFile(join(outDir, HEADERS_FILE), headers, 'utf8');
 
-        const host = site ? new URL(site).host : '';
-        if (host) {
-          const apex = host.replace(/^www\./i, '');
-          const lines = [`https://www.${apex}/* https://${apex}/$1 301`, ''];
-          await writeFile(join(outDir, REDIRECTS_FILE), lines.join('\n'), 'utf8');
-          logger.info(`edge-headers: CSP hashes + Early Hints applied; ${apex} canonicalised.`);
-        } else {
+        const host = apexHost(site);
+
+        if (!host) {
           logger.warn(
             'edge-headers: SITE_URL is not set — canonical/og:url/og:image, /sitemap.xml, ' +
-              '/robots.txt and the www→apex redirect are all missing. Set SITE_URL in .env.',
+              '/robots.txt and HSTS scoping are all missing. Set SITE_URL in .env.',
           );
+          return;
         }
+
+        if (isSharedHost(host)) {
+          logger.info(
+            `edge-headers: CSP hashes + Early Hints applied; HSTS scoped to ${host} ` +
+              '(no includeSubDomains/preload on a shared apex, no www redirect).',
+          );
+          return;
+        }
+
+        const lines = [`https://www.${host}/* https://${host}/$1 301`, ''];
+        await writeFile(join(outDir, REDIRECTS_FILE), lines.join('\n'), 'utf8');
+        logger.info(`edge-headers: CSP hashes + Early Hints applied; ${host} canonicalised.`);
       },
     },
   };

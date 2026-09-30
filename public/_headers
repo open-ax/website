@@ -2,9 +2,10 @@
 # Specific paths first; the catch-all /* carries security headers only, so it
 # can never clobber a Cache-Control set above it.
 #
-# __CSP_STYLE_HASH__ / __CSP_SCRIPT_HASH__ are replaced at build time by
-# src/integrations/edge-headers.mjs with sha256 digests of the inline <style>
-# and JSON-LD blocks actually emitted.
+# __CSP_STYLE_HASH__ / __CSP_SCRIPT_HASH__ / __HSTS__ are replaced at build time
+# by src/integrations/edge-headers.mjs with sha256 digests of the inline <style>
+# and JSON-LD blocks actually emitted, plus an HSTS value appropriate to the host
+# (see src/integrations/origin.mjs).
 
 # Content-addressed: cache forever.
 /_astro/*
@@ -62,6 +63,12 @@
   CDN-Cache-Control: public, max-age=86400, stale-while-revalidate=604800
   Content-Type: application/manifest+json; charset=utf-8
 
+# IndexNow ownership proof. Unhashed but effectively immutable; revalidated daily.
+/[0-9a-f][0-9a-f]*.txt
+  Cache-Control: public, max-age=86400, must-revalidate
+  CDN-Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+  Content-Type: text/plain; charset=utf-8
+
 # Browsers revalidate every load so deploys land immediately; the edge holds it
 # for 5 min then serves stale-while-revalidate for a day, so a traffic spike
 # never becomes an origin spike.
@@ -85,6 +92,6 @@
   Cross-Origin-Opener-Policy: same-origin-allow-popups
   Cross-Origin-Resource-Policy: same-origin
   Origin-Agent-Cluster: ?1
-  Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+  Strict-Transport-Security: __HSTS__
   Permissions-Policy: accelerometer=(), autoplay=(), camera=(), display-capture=(), encrypted-media=(), fullscreen=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), midi=(), payment=(), picture-in-picture=(), publickey-credentials-get=(), usb=(), xr-spatial-tracking=()
   Content-Security-Policy: default-src 'none'; base-uri 'none'; object-src 'none'; img-src 'self' data:; style-src __CSP_STYLE_HASH__; font-src 'self'; script-src __CSP_SCRIPT_HASH__; connect-src 'self'; manifest-src 'self'; form-action 'none'; frame-ancestors 'none'; upgrade-insecure-requests

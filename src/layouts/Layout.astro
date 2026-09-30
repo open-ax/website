@@ -26,18 +26,49 @@ const ogImage = abs('/og-image.png');
 const LOGO_SIZES = '(min-width: 640px) 40px, 36px';
 
 const org: Record<string, unknown> = {
-  '@context': 'https://schema.org',
   '@type': 'Organization',
+  '@id': '#organization',
   name: 'OpenAX',
   description:
     'OpenAX flips the web for agents: pages list the tools they offer via WebMCP and the browser runs the calls locally.',
   email: 'contactopenax@gmail.com',
   sameAs: ['https://github.com/open-ax', 'https://x.com/getaxkit'],
 };
+
+const website: Record<string, unknown> = {
+  '@type': 'WebSite',
+  '@id': '#website',
+  name: 'OpenAX',
+  description: org.description,
+  inLanguage: 'en',
+};
+
+const webpage: Record<string, unknown> = {
+  '@type': 'WebPage',
+  '@id': '#webpage',
+  name: title,
+  description,
+  inLanguage: 'en',
+};
+
 if (site) {
   org.url = `${site}/`;
-  org.logo = `${site}/og-image.png`;
+  org.logo = abs('/og-image.png');
+  website.url = `${site}/`;
+  website.publisher = { '@id': `${site}/#organization` };
+  webpage.url = `${site}/`;
+  webpage.isPartOf = { '@id': `${site}/#website` };
+  webpage.about = { '@id': `${site}/#organization` };
+  for (const node of [org, website, webpage]) {
+    const rel = node['@id'] as string;
+    node['@id'] = `${site}/${rel}`;
+  }
 }
+
+const graph = { '@context': 'https://schema.org', '@graph': [org, website, webpage] };
+
+const googleVerification = import.meta.env.GOOGLE_SITE_VERIFICATION;
+const bingVerification = import.meta.env.BING_SITE_VERIFICATION;
 ---
 
 <!doctype html>
@@ -70,6 +101,8 @@ if (site) {
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImage} />
     <meta name="twitter:image:alt" content="OpenAX" />
+    {googleVerification && <meta name="google-site-verification" content={googleVerification} />}
+    {bingVerification && <meta name="msvalidate.01" content={bingVerification} />}
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
@@ -88,7 +121,7 @@ if (site) {
       )
     }
     <Font cssVariable="--font-sans" preload />
-    <script type="application/ld+json" set:html={JSON.stringify(org)} />
+    <script type="application/ld+json" set:html={JSON.stringify(graph)} />
   </head>
   <body>
     <slot />

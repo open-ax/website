@@ -1,0 +1,11 @@
+# The repo is LF. Two files in it are line-ending sensitive: public/_headers is
+# matched by the build hook in src/integrations/edge-headers.mjs, and dist HTML
+# is measured byte-for-byte against the budget in scripts/verify.mjs. A CRLF
+# checkout on Windows silently fails both.
+* text=auto eol=lf
+
+# Binary assets must never be touched by the above.
+*.png    binary
+*.webp   binary
+*.woff2  binary
+*.ico    binary

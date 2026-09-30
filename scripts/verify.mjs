@@ -1,10 +1,11 @@
 import { readdir, readFile, stat } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { join } from 'node:path';
+import { apexHost, hstsFor, isSharedHost } from '../src/integrations/origin.mjs';
 
 const DIST = new URL('../dist/', import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1');
 
-const HTML_BUDGET = 8200;
+const HTML_BUDGET = 9600;
 const JS_BUDGET = 0;
 
 const failures = [];
@@ -74,6 +75,7 @@ const orphans = files
   .filter((r) => {
     if (UNLINKED.has(r) || r.startsWith('.well-known/')) return false;
     if (r === 'site.webmanifest' || r === 'robots.txt' || r === 'llms.txt') return false;
+    if (/^[0-9a-f]{8,128}\.txt$/.test(r)) return false;
     const name = r.slice(r.lastIndexOf('/') + 1);
     return !referenced.has(`/${name}`) && !referenced.has(r);
   });
@@ -168,6 +170,18 @@ if (headers) {
     warn('no Link: rel=preload header on the HTML routes — Cloudflare Early Hints cannot fire.');
   }
   if (!/Strict-Transport-Security/.test(headers)) fail('no HSTS header.');
+
+  const site = (process.env.SITE_URL ?? '').trim();
+  const host = apexHost(site);
+  if (host) {
+    const hsts = headers.match(/Strict-Transport-Security:\s*(.+)/)?.[1]?.trim();
+    const expected = hstsFor(host);
+    if (hsts !== expected) {
+      fail(`HSTS is "${hsts}" but ${host} requires "${expected}" (see src/integrations/origin.mjs).`);
+    } else {
+      ok(`HSTS scoped to ${host}${isSharedHost(host) ? ' (shared apex: no preload)' : ''}`);
+    }
+  }
 }
 
 if (headers) {
@@ -187,10 +201,18 @@ if (headers) {
 
   const site = (process.env.SITE_URL ?? '').trim();
   const redirects = files.some((f) => rel(f) === '_redirects') ? await read(join(DIST, '_redirects')) : '';
-  if (site) {
-    const apex = new URL(site).host.replace(/^www\./i, '');
-    if (!redirects.includes(`https://${apex}/$1 301`)) {
-      fail(`dist/_redirects does not 301 www -> ${apex}.`);
+  const host = apexHost(site);
+  if (host) {
+    if (isSharedHost(host)) {
+      if (redirects.trim()) {
+        fail(`dist/_redirects exists but ${host} is a shared apex, where a www redirect cannot exist.`);
+      } else {
+        ok(`no www redirect emitted for shared apex ${host}`);
+      }
+    } else if (!redirects.includes(`https://${host}/$1 301`)) {
+      fail(`dist/_redirects does not 301 www -> ${host}.`);
+    } else {
+      ok(`www -> ${host} 301 present`);
     }
   }
 }
