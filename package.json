@@ -1,0 +1,26 @@
+{
+  "name": "openax",
+  "type": "module",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build && node scripts/verify.mjs",
+    "preview": "astro preview",
+    "astro": "astro",
+    "check": "astro check",
+    "verify": "node scripts/verify.mjs",
+    "predeploy": "node -e \"const s=process.env.SITE_URL||'';\nif(!s||!s.startsWith('https://')){console.error('\\n  Refusing to deploy: SITE_URL is not set to an https origin.\\n  Copy .env.example to .env and set SITE_URL, or export it in CI.\\n  Without it the site ships with a relative og:image, which makes every\\n  social share render blank.\\n');process.exit(1)}\"",
+    "deploy": "npm run build && wrangler deploy",
+    "cf:dev": "astro build && wrangler dev"
+  },
+  "dependencies": {
+    "@fontsource-variable/hanken-grotesk": "^5.3.0",
+    "astro": "^7.3.5"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.4",
+    "typescript": "^5.9.2",
+    "wrangler": "^4.144.0"
+  }
+}
