@@ -14,6 +14,12 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    env:
+      SITE_URL: ${{ vars.SITE_URL }}
+      GOOGLE_SITE_VERIFICATION: ${{ vars.GOOGLE_SITE_VERIFICATION }}
+      BING_SITE_VERIFICATION: ${{ vars.BING_SITE_VERIFICATION }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
     steps:
       - uses: actions/checkout@v5
 
@@ -22,31 +28,32 @@ jobs:
           node-version: 22
           cache: npm
 
+      - name: Check configuration
+        run: |
+          missing=0
+          for name in SITE_URL CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID; do
+            if [ -z "${!name}" ]; then
+              echo "::error::$name is not set"
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            echo "::error::Add these under Settings > Secrets and variables > Actions."
+            echo "::error::  Variable  SITE_URL               e.g. https://openax.pages.dev"
+            echo "::error::  Secret    CLOUDFLARE_API_TOKEN  Workers Scripts: Edit + Account Settings: Read"
+            echo "::error::  Secret    CLOUDFLARE_ACCOUNT_ID"
+            exit 1
+          fi
+
       - run: npm ci
 
-      - name: Check credentials
-        if: ${{ !env.SITE_URL || !secrets.CLOUDFLARE_API_TOKEN || !secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: |
-          echo "::error::Missing configuration. Add under Settings > Secrets and variables > Actions:"
-          echo "  Variable  SITE_URL                (e.g. https://openax.pages.dev)"
-          echo "  Secret    CLOUDFLARE_API_TOKEN   (Workers Scripts: Edit, Account Settings: Read)"
-          echo "  Secret    CLOUDFLARE_ACCOUNT_ID"
-          exit 1
-
-      - name: Build and verify
-        run: npm run build
-        env:
-          SITE_URL: ${{ vars.SITE_URL }}
-          GOOGLE_SITE_VERIFICATION: ${{ vars.GOOGLE_SITE_VERIFICATION }}
-          BING_SITE_VERIFICATION: ${{ vars.BING_SITE_VERIFICATION }}
+      - run: npm run build
 
       - name: Deploy to Cloudflare Pages
-        run: npx wrangler pages deploy dist --commit-hash=${{ github.sha }} --commit-message=${{ github.event.head_commit.message }} --branch=main
+        run: npx wrangler pages deploy dist --commit-hash="$SHA" --commit-message="$MSG" --branch=main
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          SHA: ${{ github.sha }}
+          MSG: ${{ github.event.head_commit.message }}
 
       - name: Notify IndexNow
         run: node scripts/indexnow.mjs
-        env:
-          SITE_URL: ${{ vars.SITE_URL }}
