@@ -1,0 +1,53 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+const LOGO_SIZES = '(min-width: 640px) 40px, 36px';
+---
+
+<Layout preloadLogo>
+  <main class="wrap">
+    <picture>
+      <source type="image/webp" srcset="/logo-64.webp 1x, /logo-96.webp 2x" sizes={LOGO_SIZES} />
+      <img
+        src="/logo-64.png"
+        alt="OpenAX logo"
+        width="64"
+        height="64"
+        sizes={LOGO_SIZES}
+        loading="eager"
+        decoding="async"
+        fetchpriority="high"
+        class="logo"
+      />
+    </picture>
+
+    <h1 class="name">OpenAX</h1>
+
+    <p class="lede">
+      <span class="opener">The web was built for human eyes, we&rsquo;re fixing that for agents.</span>
+      Agents use the web by looking at it. They screenshot the page, send it to
+      a model and get back a place to click. Then they do it all again. Every step
+      costs image tokens and every click is a guess. It breaks whenever the layout
+      changes. But the page already knows what it can do. So
+       <a href="https://github.com/open-ax">OpenAX</a> flips it. Our
+      <a href="https://github.com/open-ax/ax-kit">ax-kit</a> implementation follows the
+      <a href="https://webmachinelearning.github.io/webmcp/">WebMCP draft</a> from the
+      <a href="https://www.w3.org/community/webmachinelearning/">W3C Web Machine Learning Community Group</a>.
+      Pages list the tools they offer and the browser runs the calls in your own tab.
+      Nothing to read from pixels. Nothing to guess. Being usable by agents stops
+      being extra work and starts being part of the page.
+    </p>
+
+    <nav class="links" aria-label="Contact links">
+      <a href="https://x.com/getaxkit" target="_blank" rel="me noopener noreferrer" aria-label="X">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
+      </a>
+      <a href="https://github.com/open-ax" target="_blank" rel="me noopener noreferrer" aria-label="GitHub">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2.5 5 2.5 5 2.5c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9.5c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4" /><path d="M9 18c-4.51 2-5-2-7-2" /></svg>
+      </a>
+      <a href="mailto:contactopenax@gmail.com" aria-label="Email">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="16" x="2" y="4" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" /></svg>
+      </a>
+    </nav>
+  </main>
+</Layout>
